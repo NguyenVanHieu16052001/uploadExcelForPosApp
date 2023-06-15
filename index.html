@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Đọc dữ liệu từ tập tin Excel</title>
+	<style>
+		/* CSS cho phần đầu trang */
+		header {
+			background-color: #4CAF50;
+			color: white;
+			padding: 10px;
+			text-align: center;
+			font-size: 24px;
+			margin-bottom: 20px;
+		}
+
+		/* CSS cho phần chọn tệp Excel */
+		.file-input-container {
+			text-align: center;
+			margin-bottom: 20px;
+		}
+
+		.file-input {
+			display: none;
+		}
+
+		.file-input-label {
+			display: inline-block;
+			padding: 10px 20px;
+			background-color: #4CAF50;
+			color: white;
+			border-radius: 5px;
+			cursor: pointer;
+			transition: background-color 0.3s;
+		}
+
+		.file-input-label:hover {
+			background-color: #3e8e41;
+		}
+
+		/* CSS cho danh sách sản phẩm */
+		.product-list {
+			list-style: none;
+			padding: 0;
+			margin: 20px auto;
+			max-width: 600px;
+		}
+
+		.product-list li {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: 1px solid #ddd;
+			padding: 10px;
+			font-size: 18px;
+			transition: background-color 0.3s;
+		}
+
+		.product-list li:last-child {
+			border-bottom: none;
+		}
+
+		.product-list li:hover {
+			background-color: #f2f2f2;
+		}
+
+		.product-list li span {
+			flex: 1;
+		}
+
+		.product-list li span:first-child {
+			margin-right: 20px;
+		}
+
+	</style>
+</head>
+<body>
+	<header>Đọc dữ liệu từ tập tin Excel</header>
+	<div class="file-input-container">
+		<label for="file-input" class="file-input-label">Chọn tập tin Excel</label>
+		<input type="file" id="file-input" class="file-input">
+	</div>
+	<ul id="product-list" class="product-list"></ul>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.9/xlsx.full.min.js"></script>
+	<script>
+		// Lắng nghe sự kiện khi người dùng chọn tệp Excel
+		document.getElementById('file-input').addEventListener('change', handleFileSelect, false);
+
+		function handleFileSelect(evt) {
+			var files = evt.target.files; // Lấy tệp được chọn
+			var file = files[0];
+
+			var reader = new FileReader(); // Tạo đối tượng FileReader để đọc tệp
+
+			reader.onload = function(e) {
+				var data = e.target.result;
+				var workbook = XLSX.read(data, {type: 'binary'}); // Đọc tệp Excel
+
+				var sheet_name_list = workbook.SheetNames;
+				var worksheet = workbook.Sheets[sheet_name_list[0]];
+
+				var rows = XLSX.utils.sheet_to_json(worksheet, {header: 1});
+
+				var idIndex = -1;
+				var priceIndex = -1;
+
+				// Tìm vị trí của cột ID và Giá trong sheet
+				for (var i = 0; i < rows[0].length; i++) {
+					if (rows[0][i] === 'ID') {
+						idIndex = i;
+					}
+					if (rows[0][i] === 'SoTien') {
+						priceIndex = i;
+					}
+				}
+
+				// Lấy danh sách sản phẩm từ cột ID và Giá
+				var productList = [];
+				for (var i = 1; i < rows.length; i++) {
+					var id = rows[i][idIndex];
+					var price = rows[i][priceIndex];
+					
+					if (id && price) {
+						productList.push({id: id, price: price});
+					}
+				}
+
+				// Hiển thị danh sách sản phẩm trên trang web
+				var productUl = document.getElementById('product-list');
+				productUl.innerHTML = '';
+				for (var i = 0; i < productList.length; i++) {
+					var productLi = document.createElement('li');
+					productLi.innerHTML = '<span>' + productList[i].id+ '</span><span>' + productList[i].price + '</span>';
+					productUl.appendChild(productLi);
+				}
+			};
+
+			reader.readAsBinaryString(file); // Đọc tệp theo kiểu binary
+		}
+	</script>
+</body>
+</html>
